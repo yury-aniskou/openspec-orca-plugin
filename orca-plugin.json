@@ -1,0 +1,101 @@
+{
+  "manifestVersion": 2,
+  "id": "openspec",
+  "name": "OpenSpec",
+  "version": "0.4.0",
+  "license": "Apache-2.0",
+  "description": "OpenSpec in Orca: see a workspace's changes and specs in the sidebar and start agents to explore, propose, apply, verify and archive changes.",
+  "icon": "assets/icon.png",
+  "engines": {
+    "orca": ">=1.4.259"
+  },
+  "execution": "trusted-worker",
+  "pluginApi": 1,
+  "main": "src/worker.ts",
+  "contributes": {
+    "panels": [
+      {
+        "id": "openspec",
+        "title": "OpenSpec",
+        "icon": "flag",
+        "entry": "src/panel.tsx",
+        "ui": "components"
+      }
+    ],
+    "commands": [
+      { "id": "openspec.propose", "title": "OpenSpec: New change", "when": "workspace" },
+      { "id": "openspec.apply", "title": "OpenSpec: Apply change", "when": "workspace" },
+      { "id": "openspec.verify", "title": "OpenSpec: Verify change", "when": "workspace" },
+      { "id": "openspec.archive", "title": "OpenSpec: Archive change", "when": "workspace" },
+      { "id": "openspec.openBoard", "title": "OpenSpec: Open board", "when": "workspace" },
+      { "id": "openspec.refresh", "title": "OpenSpec: Refresh panel", "when": "workspace" }
+    ],
+    "customEditors": [
+      {
+        "id": "board",
+        "title": "OpenSpec board",
+        "extensions": [".openspec"],
+        "entry": "board/main.ts",
+        "frame": "isolated"
+      }
+    ],
+    "events": [{ "on": "workspace.changed" }, { "on": "agent.status.changed" }],
+    "settings": [
+      {
+        "key": "agent",
+        "title": "Agent",
+        "description": "Agent CLI launched for OpenSpec commands.",
+        "type": "string",
+        "default": "claude"
+      },
+      {
+        "key": "model",
+        "title": "Default model",
+        "description": "Model passed to the agent CLI when none is chosen. Empty uses the CLI's own default.",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "key": "stageDefaults",
+        "title": "Per-stage defaults (JSON)",
+        "description": "Agent and model per stage, e.g. {\"propose\": {\"agent\": \"claude\", \"model\": \"opus\"}, \"apply\": {\"model\": \"sonnet\"}}. Stages: explore, propose, apply, verify, archive.",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "key": "modelFlags",
+        "title": "Model flags (JSON)",
+        "description": "Override the model flag per agent, e.g. {\"codex\": \"-m {model}\"}.",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "key": "extraArgs",
+        "title": "Extra CLI arguments (JSON)",
+        "description": "Extra arguments per agent, e.g. {\"claude\": \"--permission-mode plan\"}. Plain tokens only.",
+        "type": "string",
+        "default": ""
+      },
+      {
+        "key": "commandStyle",
+        "title": "Command style",
+        "description": "How the agent is told to run each OpenSpec step. Use OPSX only if your agent has /opsx:* commands.",
+        "type": "string",
+        "default": "skill",
+        "enum": ["skill", "opsx"],
+        "enumLabels": ["Skill commands (/openspec-apply-change …)", "OPSX commands (/opsx:apply …)"]
+      }
+    ]
+  },
+  "capabilities": [
+    { "kind": "storage:own" },
+    { "kind": "settings:own" },
+    { "kind": "workspace:read" },
+    { "kind": "workspace:write" },
+    { "kind": "agent:read" },
+    { "kind": "agent:launch" },
+    { "kind": "terminal:send" },
+    { "kind": "terminal:read" },
+    { "kind": "notifications:show" }
+  ]
+}
