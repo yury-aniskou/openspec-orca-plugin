@@ -2,7 +2,7 @@
   "manifestVersion": 2,
   "id": "openspec",
   "name": "OpenSpec",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "license": "Apache-2.0",
   "description": "OpenSpec in Orca: see a workspace's changes and specs in the sidebar and start agents to explore, propose, apply, verify and archive changes.",
   "icon": "assets/icon.png",
