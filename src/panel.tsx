@@ -335,10 +335,6 @@ function ChoiceFields(props: { agentAtom: typeof launchAgent; modelAtom: typeof 
   )
 }
 
-function LaunchPicker() {
-  return <ChoiceFields agentAtom={launchAgent} modelAtom={launchModel} />
-}
-
 function LaunchDialog() {
   const target = read(pending)
   if (!target) return null
@@ -687,7 +683,7 @@ export default function Panel() {
   return (
     <Stack gap="sm">
       <Header title={title} canCreate />
-      {read(pending) ? <LaunchDialog /> : <LaunchPicker />}
+      {read(pending) ? <LaunchDialog /> : null}
       {read(formOpen) ? <NewChangeForm /> : null}
       {errorBox}
       <Tabs label="OpenSpec views" value={read(tab)} onChange={(v) => set(tab, v)}>

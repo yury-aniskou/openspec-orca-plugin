@@ -75,12 +75,73 @@ test('answers state, then launches, shows and types the command', async () => {
 test('opsx style and form description', async () => {
   const h = host(fixture(), { agent: 'claude', commandStyle: 'opsx' })
   const worker = await mountWorker(main, { host: h })
-  await worker.request('openspec.launch', { step: 'propose', description: 'add dark mode', agent: 'codex' })
+  await worker.request('openspec.launch', { step: 'explore', description: 'add dark mode', agent: 'codex' })
   assert.deepEqual(h.callsOf('agent.launch'), [{ workspaceId: 'w1', agent: 'codex' }])
   await main.whenDelivered()
   assert.deepEqual(h.callsOf('terminal.sendText'), [
-    { terminalId: 't1', text: '/opsx:propose add dark mode', enter: true }
+    { terminalId: 't1', text: '/opsx:explore add dark mode', enter: true }
   ])
+  assert.equal(h.callsOf('workspace.create').length, 0)
+  await worker.deactivate()
+})
+
+function gitHost(extra: Record<string, unknown> = {}) {
+  return host(
+    fixture(),
+    { agent: 'claude' },
+    {
+      'workspace.list': {
+        workspaces: [{ id: 'w1', kind: 'worktree', name: 'demo', projectId: 'p1', path: fixture(), branch: 'main', hostId: 'local' }],
+        truncated: false
+      },
+      'workspace.create': { workspaceId: 'w9' },
+      ...extra
+    }
+  )
+}
+
+test('propose creates a worktree and launches there, not in the focused workspace', async () => {
+  const h = gitHost()
+  const worker = await mountWorker(main, { host: h })
+  await worker.request('openspec.launch', { step: 'propose', description: 'add dark mode' })
+  assert.deepEqual(h.callsOf('workspace.create'), [{ projectId: 'p1', name: 'add-dark-mode', open: true }])
+  assert.deepEqual(h.callsOf('agent.launch'), [{ workspaceId: 'w9', agent: 'claude' }])
+  await main.whenDelivered()
+  assert.deepEqual(h.callsOf('terminal.sendText'), [
+    { terminalId: 't1', text: '/openspec-propose add dark mode', enter: true }
+  ])
+  await worker.deactivate()
+})
+
+test('propose launches nothing when the worktree cannot be created', async () => {
+  const h = gitHost({
+    'workspace.create': () => {
+      throw new Error('boom')
+    }
+  })
+  const worker = await mountWorker(main, { host: h })
+  await assert.rejects(() => worker.request('openspec.launch', { step: 'propose', description: 'x' }))
+  assert.equal(h.callsOf('agent.launch').length, 0)
+  assert.equal(h.callsOf('terminal.create').length, 0)
+  await worker.deactivate()
+})
+
+test('propose in a folder without a project is refused', async () => {
+  const h = host(fixture())
+  const worker = await mountWorker(main, { host: h })
+  await assert.rejects(() => worker.request('openspec.launch', { step: 'propose', description: 'x' }))
+  assert.equal(h.callsOf('workspace.create').length, 0)
+  assert.equal(h.callsOf('agent.launch').length, 0)
+  await worker.deactivate()
+})
+
+test('apply, verify and archive stay in the focused workspace', async () => {
+  const h = gitHost()
+  const worker = await mountWorker(main, { host: h })
+  await worker.request('openspec.launch', { step: 'apply', change: 'add-auth' })
+  assert.equal(h.callsOf('workspace.create').length, 0)
+  assert.deepEqual(h.callsOf('agent.launch'), [{ workspaceId: 'w1', agent: 'claude' }])
+  await main.whenDelivered()
   await worker.deactivate()
 })
 

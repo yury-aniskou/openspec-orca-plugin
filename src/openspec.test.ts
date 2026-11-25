@@ -12,7 +12,8 @@ import {
   readArchived,
   readChanges,
   readSpecs,
-  resolveInside
+  resolveInside,
+  worktreeName
 } from './openspec'
 
 function fixture(): string {
@@ -99,4 +100,12 @@ test('resolveInside refuses paths outside openspec/ markdown', () => {
   assert.throws(() => resolveInside(root, 'link.md'))
   assert.throws(() => resolveInside(root, 'notes.txt'))
   assert.throws(() => resolveInside(root, join(root, 'secret.md')))
+})
+
+test('worktreeName makes a short kebab-case name', () => {
+  assert.equal(worktreeName('Add Dark Mode!'), 'add-dark-mode')
+  assert.equal(worktreeName('   '), 'openspec-change')
+  assert.equal(worktreeName('тёмная тема'), 'openspec-change')
+  const long = worktreeName('word '.repeat(30))
+  assert.ok(long.length <= 40 && !long.endsWith('-'))
 })

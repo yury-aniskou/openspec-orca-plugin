@@ -228,3 +228,14 @@ export function specPath(root: string, spec: string): string {
   if (!readSpecs(root).includes(spec)) throw new Error(`No such spec: ${spec}`)
   return `specs/${spec}/spec.md`
 }
+
+/** A kebab-case worktree name from a change description: ASCII words only, at most 40 characters. */
+export function worktreeName(description: string): string {
+  const slug = description
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40)
+    .replace(/-+$/, '')
+  return slug || 'openspec-change'
+}

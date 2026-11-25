@@ -7,7 +7,7 @@
   "description": "OpenSpec in Orca: see a workspace's changes and specs in the sidebar and start agents to explore, propose, apply, verify and archive changes.",
   "icon": "assets/icon.png",
   "engines": {
-    "orca": ">=1.4.259"
+    "orca": ">=1.4.272"
   },
   "execution": "trusted-worker",
   "pluginApi": 1,
@@ -92,6 +92,7 @@
     { "kind": "settings:own" },
     { "kind": "workspace:read" },
     { "kind": "workspace:write" },
+    { "kind": "workspace:create" },
     { "kind": "agent:read" },
     { "kind": "agent:launch" },
     { "kind": "terminal:send" },

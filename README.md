@@ -6,7 +6,7 @@ An [Orca](https://github.com/stablyai/orca) plugin for [OpenSpec](https://github
 
 - **Changes tab:** active changes from `openspec/changes/` (not `archive/`) with status (Planning, Not started, In progress, Ready to archive), progress bar and checked/total tasks. Name filter and status dropdown.
 - **Specs tab:** every `openspec/specs/**/spec.md`, nested paths included, with a name filter.
-- **Actions:** **+** opens the New change form (description, agent, Explore or Propose). Selecting a change shows Apply and Verify, or Archive once all tasks are done. Each action starts an agent in the workspace, shows its terminal, waits until it is ready, then types the command.
+- **Actions:** **+** opens the New change form (description, agent, Explore or Propose). Selecting a change shows Apply and Verify, or Archive once all tasks are done. **Propose creates a new worktree workspace** (new branch, named from the description) and runs there; switch to it to Apply, Verify or Archive that change. It is cut from the base branch, so uncommitted local files are not copied. Explore, Apply, Verify and Archive start an agent in the focused workspace; shows its terminal, waits until it is ready, then types the command.
 - **Palette:** `OpenSpec: New change`, `Apply change`, `Verify change`, `Archive change`, `Refresh panel`.
 - **Auto-refresh:** on workspace switch, when a launched agent finishes, via the Refresh button, and ~300 ms after files in `openspec/` change.
 - **Init OpenSpec:** in a workspace without `openspec/`, a button runs `openspec init` in a terminal.
@@ -20,13 +20,13 @@ An [Orca](https://github.com/stablyai/orca) plugin for [OpenSpec](https://github
 
 ## Requirements
 
-- Orca 1.4.259 or newer
+- Orca 1.4.272 or newer
 - The `openspec` CLI (for Init OpenSpec)
 - An agent with the OpenSpec skills or slash commands installed
 
 ## Permissions
 
-`workspace:read`, `workspace:write` (show agent terminals), `agent:read`, `agent:launch`, `terminal:send`, `terminal:read`, `notifications:show`, `storage:own`, `settings:own`.
+`workspace:read`, `workspace:write` (show agent terminals), `workspace:create` (Propose's worktree), `agent:read`, `agent:launch`, `terminal:send`, `terminal:read`, `notifications:show`, `storage:own`, `settings:own`.
 
 ## Limitations
 
@@ -51,7 +51,7 @@ Layout: `src/panel.tsx` (UI, state in atoms, only calls `plugin.request`), `src/
 
 ## Provider and model
 
-Pick the agent CLI and model under "Agent"/"Model" in the panel, or "Run with" on the board; the choice is remembered. With a model, the plugin starts the CLI itself (for example `claude --model opus`), waits until it is ready, then sends the OpenSpec command. Without one it launches the agent as before. Settings: `model` (default), `modelFlags` (JSON per agent, e.g. `{"codex": "-m {model}"}`) and `extraArgs` (JSON per agent). Model names may contain only letters, digits and `. _ : / -`.
+The agent CLI and model are chosen only in the dialog that opens when you press a stage button (or "Run with" on the board); the panel shows no pickers otherwise. The last choice is remembered. With a model, the plugin starts the CLI itself (for example `claude --model opus`), waits until it is ready, then sends the OpenSpec command. Without one it launches the agent as before. Settings: `model` (default), `modelFlags` (JSON per agent, e.g. `{"codex": "-m {model}"}`) and `extraArgs` (JSON per agent). Model names may contain only letters, digits and `. _ : / -`.
 
 ## Choose per stage
 

@@ -8,7 +8,8 @@ import {
   readChanges,
   readSpecs,
   resolveInside,
-  specPath
+  specPath,
+  worktreeName
 } from './openspec'
 import type { OpenSpecState, OpsxStep } from './protocol'
 import {
@@ -175,7 +176,7 @@ const SELECTED = 'selectedChange'
 
 const invalid = (message: string) => Object.assign(new Error(message), { code: 'invalid_params' })
 
-type Focus = { workspaceId: string; path: string; hostId: string | null; name: string }
+type Focus = { workspaceId: string; path: string; hostId: string | null; name: string; projectId: string | null }
 
 async function focused(orca: OrcaWorkerApi): Promise<Focus | null> {
   const ctx = await orca.host.call('workspace.readContext')
@@ -183,7 +184,7 @@ async function focused(orca: OrcaWorkerApi): Promise<Focus | null> {
   const { workspaces } = await orca.host.call('workspace.list')
   const row = workspaces.find((w) => w.id === ctx.workspaceId)
   if (!row) return null
-  return { workspaceId: row.id, path: row.path, hostId: row.hostId, name: ctx.displayName }
+  return { workspaceId: row.id, path: row.path, hostId: row.hostId, name: ctx.displayName, projectId: row.projectId ?? null }
 }
 
 const isLocal = (ws: Focus): boolean => !ws.hostId || ws.hostId === 'local'
@@ -417,7 +418,20 @@ export default function activate(orca: OrcaWorkerApi): void {
       throw invalid(err instanceof Error ? err.message : String(err))
     }
     const style = commandStyleOf(await orca.settings.get('commandStyle'))
-    const terminalId = await launchVisible(orca, ws.workspaceId, agent, promptFor(step, arg, style), command)
+    let workspaceId = ws.workspaceId
+    if (step === 'propose') {
+      if (!ws.projectId) throw invalid('Propose needs a workspace in a Git project to create a worktree.')
+      try {
+        ;({ workspaceId } = await orca.host.call('workspace.create', {
+          projectId: ws.projectId,
+          name: worktreeName(arg ?? ''),
+          open: true
+        }))
+      } catch (err) {
+        throw invalid(`Could not create a worktree: ${err instanceof Error ? err.message : String(err)}`)
+      }
+    }
+    const terminalId = await launchVisible(orca, workspaceId, agent, promptFor(step, arg, style), command)
     launched.add(terminalId)
     return { terminalId }
   }
